@@ -46,6 +46,8 @@ NEXT_PUBLIC_MODEL_NAME=le_nom_du_modèle_à_utiliser
 3. Tapez votre message dans le champ de saisie
 4. Le chatbot répondra avec une réponse générée par IA
 
+Intégration de l'API IA :  l'API Deepseek avec le model deepseek-r1-0528:free pour récupérer des réponses dynamiques basées sur l'IA.
+
 ## Structure du projet
 
 - `pages/` : Pages Next.js
@@ -66,7 +68,3 @@ Pour démarrer le serveur de production :
 ```bash
 npm start
 ```
-
-## Projet digne d'un portfolio
-
-Ce chatbot est un excellent ajout à votre portfolio, démontrant vos compétences en React, Next.js, TypeScript, intégration d'API et design d'interface utilisateur.
