@@ -3,19 +3,39 @@
 
 /* Importing Material Symbols */
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0..200');
+
+@tailwind base;
+@tailwind components;
+@import '../styles/chatbot-enhanced.css';
+@tailwind utilities;
+
+:root {
+  /* Couleurs principales RH */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  
+  /* Couleurs fonctionnelles */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #06b6d4;
+  
+  /* Couleurs chat */
+  --chat-bg: #f8fafc;
+  --chat-user: #2563eb;
+  --chat-bot: #ffffff;
+  --chat-border: #e2e8f0;
+}
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
 }
-body {
-  width: 100%;
-  min-height: 100vh;
-  background: url("./assets/chatbot.jpg");
-  background-size: cover;
-  background-position: center;
-}
+/* Styles body supprimés car gérés par Next.js et appliqués directement au composant main */
 #chatbot-toggler {
   position: fixed;
   bottom: 30px;
@@ -231,4 +251,83 @@ body {
   .chat-footer {
     padding: 10px 15px 15px;
   }
+}
+/* Animations personnalisées */
+@keyframes bounce-dots {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-dots {
+  animation: bounce-dots 1.4s infinite ease-in-out both;
+}
+
+.animate-bounce-dots:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.animate-bounce-dots:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+/* Scrollbar personnalisée pour le chat */
+.chat-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Style pour les messages */
+.message-bubble {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+/* Responsive design pour mobile */
+@media (max-width: 768px) {
+  .chatbot-container {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    z-index: 9999;
+  }
+  
+  .chatbot-minimized {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+}
+
+/* Transitions fluides */
+.transition-smooth {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus styles améliorés */
+.focus-ring:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
 }

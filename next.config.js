@@ -1,8 +1,30 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuration options for Next.js
-  reactStrictMode: true, // Recommended for the `app` directory
-  // Add any other Next.js configuration options here
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'date-fns'],
+  },
+  webpack: (config) => {
+    // S'assurer que splitChunks et cacheGroups existent
+    if (!config.optimization) {
+      config.optimization = {};
+    }
+    if (!config.optimization.splitChunks) {
+      config.optimization.splitChunks = {};
+    }
+    if (!config.optimization.splitChunks.cacheGroups) {
+      config.optimization.splitChunks.cacheGroups = {};
+    }
+    
+    // Ajouter le cache group pour le chatbot
+    config.optimization.splitChunks.cacheGroups.chatbot = {
+      name: 'chatbot',
+      test: /[\/]src[\/]components[\/](ChatBot|hr|mobile|ui)[\/]/,
+      chunks: 'all',
+      enforce: true,
+    };
+    
+    return config;
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
