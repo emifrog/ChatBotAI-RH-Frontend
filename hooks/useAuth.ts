@@ -1,51 +1,49 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext, createContext } from 'react';
+import { apiService, User, LoginResponse } from '../lib/api';
 
-interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  department: string;
-  role: string;
-  antibiaId: string;
-}
-
-interface UseAuthReturn {
-  user: AuthUser | null;
+interface AuthContextType {
+  user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: any) => Promise<void>;
+  logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   error: string | null;
 }
 
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = (): UseAuthReturn => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Vérification du token au chargement
+  // Initialisation au chargement
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       try {
-        const storedToken = localStorage.getItem('chatbot_token');
-        const storedUser = localStorage.getItem('chatbot_user');
+        const storedToken = localStorage.getItem('accessToken');
+        const storedUser = localStorage.getItem('user');
 
         if (storedToken && storedUser) {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
+          
+          // Vérifier que le token est toujours valide
+          try {
+            const profile = await apiService.getProfile();
+            setUser(profile);
+          } catch (error) {
+            // Token invalide, nettoyer
+            await logout();
+          }
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération des données auth:', error);
-        localStorage.removeItem('chatbot_token');
-        localStorage.removeItem('chatbot_user');
+        console.error('Erreur initialisation auth:', error);
+        await logout();
       } finally {
         setLoading(false);
       }
@@ -54,81 +52,93 @@ export const useAuth = (): UseAuthReturn => {
     initAuth();
   }, []);
 
-  // Connexion
-  const login = useCallback(async (credentials: LoginCredentials) => {
+  const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur de connexion');
-      }
-
-      const data = await response.json();
+      const response: LoginResponse = await apiService.login(email, password);
       
-      setToken(data.token);
-      setUser(data.user);
+      setToken(response.accessToken);
+      setUser(response.user);
       
-      localStorage.setItem('chatbot_token', data.token);
-      localStorage.setItem('chatbot_user', JSON.stringify(data.user));
+      console.log('✅ Connexion réussie:', response.user.name);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Erreur de connexion');
+      const message = error instanceof Error ? error.message : 'Erreur de connexion';
+      setError(message);
+      console.error('❌ Erreur connexion:', error);
       throw error;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Déconnexion
-  const logout = useCallback(() => {
-    setUser(null);
-    setToken(null);
+  const register = useCallback(async (userData: any) => {
+    setLoading(true);
     setError(null);
-    localStorage.removeItem('chatbot_token');
-    localStorage.removeItem('chatbot_user');
+    
+    try {
+      await apiService.register(userData);
+      console.log('✅ Inscription réussie');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erreur lors de l\'inscription';
+      setError(message);
+      console.error('❌ Erreur inscription:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Rafraîchissement du token
-  const refreshToken = useCallback(async () => {
-    if (!token) return;
-
+  const logout = useCallback(async () => {
+    setLoading(true);
+    
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setToken(data.token);
-        localStorage.setItem('chatbot_token', data.token);
-      } else {
-        logout();
-      }
+      await apiService.logout();
+      console.log('✅ Déconnexion réussie');
     } catch (error) {
-      console.error('Erreur refresh token:', error);
-      logout();
+      console.error('❌ Erreur déconnexion:', error);
+    } finally {
+      setUser(null);
+      setToken(null);
+      setError(null);
+      setLoading(false);
     }
-  }, [token, logout]);
+  }, []);
 
-  return {
+  const refreshToken = useCallback(async () => {
+    try {
+      const newToken = await apiService.refreshToken();
+      setToken(newToken);
+    } catch (error) {
+      console.error('❌ Erreur refresh token:', error);
+      await logout();
+    }
+  }, [logout]);
+
+  const value: AuthContextType = {
     user,
     token,
     isAuthenticated: !!user && !!token,
     loading,
     login,
+    register,
     logout,
     refreshToken,
     error
   };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
