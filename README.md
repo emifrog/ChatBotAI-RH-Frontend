@@ -9,13 +9,13 @@
 
 ## 📋 Description
 
-ChatBot RH est une application frontend moderne développée avec **Next.js 15** et **React 19**, conçue pour faciliter les interactions RH via une interface conversationnelle intelligente. L'application s'intègre avec le système RH **Antibia** et utilise l'**API OpenRouter** pour générer des réponses dynamiques basées sur l'intelligence artificielle.
+ChatBot RH est une application frontend moderne développée avec **Next.js 15** et **React 19**, conçue pour faciliter les interactions RH via une interface conversationnelle intelligente. L'application s'intègre avec le système RH **Antibia** et utilise l'**API OpenAI** pour générer des réponses dynamiques basées sur l'intelligence artificielle.
 
 ## ✨ Fonctionnalités principales
 
 ### 🎯 Chat IA
 - Interface conversationnelle intuitive
-- Intégration API OpenRouter pour l'IA
+- Intégration de l'API OpenAI pour l'IA
 - Système de feedback (👍/👎)
 - Historique des conversations
 - Support mobile optimisé
@@ -105,7 +105,7 @@ cp .env.example .env.local
 ### Variables d'environnement
 ```env
 # API Configuration
-NEXT_PUBLIC_OPENROUTER_API_KEY=your_openrouter_key
+NEXT_PUBLIC_OPENAI_API_KEY=your_openai_key
 NEXT_PUBLIC_ANTIBIA_API_URL=your_antibia_url
 NEXT_PUBLIC_SOCKET_URL=your_socket_server_url
 
