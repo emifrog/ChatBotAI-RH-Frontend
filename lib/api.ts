@@ -71,9 +71,12 @@ class ApiService {
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return this.client(originalRequest);
           } catch (refreshError) {
-            this.logout();
-            window.location.href = '/login';
-            return Promise.reject(refreshError);
+            console.warn('Échec du refresh token:', refreshError instanceof Error ? refreshError.message : 'Erreur inconnue');
+            this.clearTokens();
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login';
+            }
+            return Promise.reject(new Error('Session expirée - veuillez vous reconnecter'));
           }
         }
 
@@ -157,7 +160,12 @@ class ApiService {
     const refreshToken = this.getStoredRefreshToken();
     
     if (!refreshToken) {
-      throw new Error('Pas de refresh token');
+      console.warn('Refresh token manquant dans localStorage - redirection vers login');
+      this.clearTokens();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      throw new Error('Session expirée - veuillez vous reconnecter');
     }
 
     const response = await this.client.post<ApiResponse<{ accessToken: string; refreshToken: string }>>('/api/auth/refresh', {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios, { AxiosInstance } from 'axios';
 
 interface UserProfile {
@@ -58,11 +58,13 @@ export const useAntibia = (token: string | null): UseAntibiaReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Configuration axios
-  const apiClient: AxiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000',
-    timeout: 10000
-  });
+  // Configuration axios - useMemo pour éviter la recréation
+  const apiClient: AxiosInstance = useMemo(() => {
+    return axios.create({
+      baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000',
+      timeout: 10000
+    });
+  }, []);
 
   // Intercepteur pour ajouter le token et gérer les erreurs
   useEffect(() => {
@@ -97,8 +99,10 @@ export const useAntibia = (token: string | null): UseAntibiaReturn => {
     
     setLoading(true);
     try {
-      const response = await apiClient.get('/api/antibia/profile');
-      setUserProfile(response.data);
+      const response = await apiClient.get('/api/auth/profile');
+      if (response.data.success && response.data.data) {
+        setUserProfile(response.data.data.user);
+      }
       setError(null);
     } catch (err) {
       console.error('Erreur récupération profil:', err);
@@ -113,8 +117,10 @@ export const useAntibia = (token: string | null): UseAntibiaReturn => {
     
     setLoading(true);
     try {
-      const response = await apiClient.get('/api/antibia/leaves/balance');
-      setLeaveBalance(response.data);
+      const response = await apiClient.get('/api/leaves/balance');
+      if (response.data.success && response.data.data) {
+        setLeaveBalance(response.data.data);
+      }
       setError(null);
     } catch (err) {
       console.error('Erreur solde congés:', err);
@@ -123,14 +129,30 @@ export const useAntibia = (token: string | null): UseAntibiaReturn => {
     }
   }, [token, apiClient]);
 
-  // Récupération bulletins de paie
+  // Récupération bulletins de paie (simulation)
   const refetchPayslips = useCallback(async () => {
     if (!token) return;
     
     setLoading(true);
     try {
-      const response = await apiClient.get('/api/antibia/payslips');
-      setPayslips(response.data);
+      // Simulation des données de bulletins de paie
+      const mockPayslips = [
+        {
+          id: '1',
+          period: '2024-11',
+          netSalary: 3245,
+          grossSalary: 4380,
+          downloadUrl: '#'
+        },
+        {
+          id: '2',
+          period: '2024-10',
+          netSalary: 3245,
+          grossSalary: 4380,
+          downloadUrl: '#'
+        }
+      ];
+      setPayslips(mockPayslips);
       setError(null);
     } catch (err) {
       console.error('Erreur bulletins paie:', err);
@@ -139,14 +161,32 @@ export const useAntibia = (token: string | null): UseAntibiaReturn => {
     }
   }, [token, apiClient]);
 
-  // Récupération formations
+  // Récupération formations (simulation)
   const refetchTrainings = useCallback(async () => {
     if (!token) return;
     
     setLoading(true);
     try {
-      const response = await apiClient.get('/api/antibia/trainings');
-      setTrainings(response.data);
+      // Simulation des données de formations
+      const mockTrainings = [
+        {
+          id: '1',
+          title: 'React Advanced',
+          description: 'Formation React avancée',
+          duration: '2 jours',
+          availableSpots: 8,
+          recommended: true
+        },
+        {
+          id: '2',
+          title: 'TypeScript Fundamentals',
+          description: 'Bases de TypeScript',
+          duration: '1 jour',
+          availableSpots: 12,
+          recommended: false
+        }
+      ];
+      setTrainings(mockTrainings);
       setError(null);
     } catch (err) {
       console.error('Erreur formations:', err);
@@ -161,7 +201,7 @@ export const useAntibia = (token: string | null): UseAntibiaReturn => {
     
     setLoading(true);
     try {
-      const response = await apiClient.post('/api/antibia/leaves/request', leaveData);
+      const response = await apiClient.post('/api/leaves/request', leaveData);
       setError(null);
       // Rafraîchir le solde après la demande
       await refetchLeaveBalance();
@@ -174,19 +214,18 @@ export const useAntibia = (token: string | null): UseAntibiaReturn => {
     }
   }, [token, apiClient, refetchLeaveBalance]);
 
-  // Inscription formation
+  // Inscription formation (simulation)
   const enrollTraining = useCallback(async (trainingId: string) => {
     if (!token) throw new Error('Non authentifié');
     
     setLoading(true);
     try {
-      const response = await apiClient.post('/api/antibia/trainings/enroll', {
-        trainingId
-      });
+      // Simulation de l'inscription à une formation
+      console.log(`Inscription à la formation ${trainingId}`);
       setError(null);
       // Rafraîchir la liste des formations
       await refetchTrainings();
-      return response.data;
+      return { success: true, message: 'Inscription réussie' };
     } catch (err) {
       console.error('Erreur inscription formation:', err);
       throw err;
