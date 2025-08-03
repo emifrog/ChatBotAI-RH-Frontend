@@ -144,7 +144,7 @@ export const ChatBotEnhanced: React.FC = () => {
           <div className="p-6 text-center">
             <p className="text-gray-600 mb-4">Connectez-vous pour accéder à votre assistant RH personnalisé</p>
             <button
-              onClick={() => auth.login({ email: 'demo@company.com', password: 'demo' })}
+              onClick={() => auth.login('demo@company.com', 'demo')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
               Connexion démo

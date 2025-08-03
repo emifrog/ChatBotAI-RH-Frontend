@@ -63,10 +63,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(response.user);
       
       console.log('✅ Connexion réussie:', response.user.name);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erreur de connexion';
+    } catch (error: any) {
+      console.error('❌ Erreur connexion détaillée:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL
+        }
+      });
+      const message = error.response?.data?.message || error.message || 'Erreur de connexion';
       setError(message);
-      console.error('❌ Erreur connexion:', error);
       throw error;
     } finally {
       setLoading(false);
