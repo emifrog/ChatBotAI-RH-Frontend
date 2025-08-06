@@ -8,19 +8,55 @@ export const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-export const formatDate = (date: Date | string): string => {
+// Helper function to validate and parse dates
+const parseDate = (date: Date | string | null | undefined): Date | null => {
+  if (!date) return null;
+  
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return format(dateObj, 'dd/MM/yyyy', { locale: fr });
+  
+  // Check if the date is valid
+  if (isNaN(dateObj.getTime())) {
+    console.warn('Invalid date value:', date);
+    return null;
+  }
+  
+  return dateObj;
 };
 
-export const formatDateTime = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return format(dateObj, 'dd/MM/yyyy à HH:mm', { locale: fr });
+export const formatDate = (date: Date | string | null | undefined): string => {
+  const dateObj = parseDate(date);
+  if (!dateObj) return 'Date invalide';
+  
+  try {
+    return format(dateObj, 'dd/MM/yyyy', { locale: fr });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date invalide';
+  }
 };
 
-export const formatRelativeTime = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return formatDistanceToNow(dateObj, { addSuffix: true, locale: fr });
+export const formatDateTime = (date: Date | string | null | undefined): string => {
+  const dateObj = parseDate(date);
+  if (!dateObj) return 'Date invalide';
+  
+  try {
+    return format(dateObj, 'dd/MM/yyyy à HH:mm', { locale: fr });
+  } catch (error) {
+    console.error('Error formatting datetime:', error);
+    return 'Date invalide';
+  }
+};
+
+export const formatRelativeTime = (date: Date | string | null | undefined): string => {
+  const dateObj = parseDate(date);
+  if (!dateObj) return 'Date inconnue';
+  
+  try {
+    return formatDistanceToNow(dateObj, { addSuffix: true, locale: fr });
+  } catch (error) {
+    console.error('Error formatting relative time:', error);
+    return 'Date inconnue';
+  }
 };
 
 export const formatDuration = (days: number): string => {

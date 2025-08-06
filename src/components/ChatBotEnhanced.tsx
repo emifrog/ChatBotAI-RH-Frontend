@@ -3,16 +3,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, User, Bot, Minimize2, Maximize2, Settings, 
-  ThumbsUp, ThumbsDown, Copy, MoreHorizontal 
+  ThumbsUp, ThumbsDown, Copy, MoreHorizontal, LogOut 
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocket } from '../../hooks/useSocket';
 import { useAntibia } from '../../hooks/useAntibia';
 import { useNotifications, NotificationSystem } from './ui/NotificationSystem';
 import { MobileChatBot } from './mobile/MobileChatBot';
-import { LeaveCard } from './hr/LeaveCard';
-import { PayrollCard } from './hr/PayrollCard';
-import { TrainingCard } from './hr/TrainingCard';
 import { QuickActionsPanel } from './hr/QuickActionsPanel';
 
 export const ChatBotEnhanced: React.FC = () => {
@@ -193,53 +190,6 @@ export const ChatBotEnhanced: React.FC = () => {
             
             <QuickActionsPanel onAction={handleQuickAction} userRole={auth.user?.role} />
             
-            {antibia.leaveBalance && (
-              <LeaveCard 
-                balance={antibia.leaveBalance}
-                recentRequests={[]}
-                onAction={handleQuickAction}
-              />
-            )}
-            
-            {antibia.payslips && antibia.payslips.length > 0 && (
-              <PayrollCard 
-                currentPayslip={{
-                  id: antibia.payslips[0]?.id || '1',
-                  period: antibia.payslips[0]?.period || 'N/A',
-                  netSalary: antibia.payslips[0]?.netSalary || 0,
-                  grossSalary: antibia.payslips[0]?.grossSalary || 0,
-                  downloadUrl: antibia.payslips[0]?.downloadUrl || '',
-                  status: 'available' as const
-                }}
-                previousPayslips={antibia.payslips.slice(1).map(p => ({
-                  id: p.id,
-                  period: p.period,
-                  netSalary: p.netSalary,
-                  grossSalary: p.grossSalary,
-                  downloadUrl: p.downloadUrl,
-                  status: 'available' as const
-                }))}
-                onAction={handleQuickAction}
-              />
-            )}
-            
-            {antibia.trainings && antibia.trainings.length > 0 && (
-              <TrainingCard 
-                recommendedTrainings={antibia.trainings.map(t => ({
-                  id: t.id,
-                  title: t.title,
-                  description: t.description,
-                  duration: t.duration,
-                  availableSpots: t.availableSpots,
-                  totalSpots: t.availableSpots + 5, // Estimation
-                  recommended: t.recommended || false,
-                  category: 'RH',
-                  difficulty: 'intermediate' as const
-                })).filter(t => t.recommended)}
-                userTrainings={[]}
-                onAction={handleQuickAction}
-              />
-            )}
           </div>
         )}
 
@@ -266,6 +216,17 @@ export const ChatBotEnhanced: React.FC = () => {
                 <Settings className="w-4 h-4" />
               </button>
               <button
+                onClick={() => {
+                  if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                    auth.logout();
+                  }
+                }}
+                className="hover:bg-blue-800 p-1 rounded transition-colors"
+                title="Se déconnecter"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+              <button
                 onClick={() => setIsMinimized(true)}
                 className="hover:bg-blue-800 p-1 rounded transition-colors"
               >
@@ -276,6 +237,24 @@ export const ChatBotEnhanced: React.FC = () => {
 
           {/* Messages avec interactions améliorées */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            {/* Message d'accueil */}
+            {socket.messages.length === 0 && (
+              <div className="flex justify-start">
+                <div className="max-w-[85%]">
+                  <div className="flex items-start gap-2">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white border-2 border-gray-200">
+                      <Bot className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="rounded-lg p-3 bg-white border border-gray-200 text-gray-800 shadow-sm">
+                      <div className="text-sm">
+                        Bonjour, que puis-je faire pour vous ?
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {socket.messages.map((message) => (
               <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
@@ -397,19 +376,7 @@ export const ChatBotEnhanced: React.FC = () => {
               </button>
             </div>
             
-            {/* Suggestions intelligentes */}
-            <div className="flex flex-wrap gap-1">
-              {['Congés restants', 'Dernier bulletin', 'Formations dispo', 'Aide RH'].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  onClick={() => setInputText(suggestion)}
-                  className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition-colors"
-                  disabled={socket.isLoading}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
+
           </div>
         </div>
       </div>
